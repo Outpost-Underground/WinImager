@@ -28,7 +28,6 @@
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.comboBoxDrives = new System.Windows.Forms.ComboBox();
             this.textBoxDestination = new System.Windows.Forms.TextBox();
             this.buttonBrowse = new System.Windows.Forms.Button();
@@ -54,7 +53,7 @@
             this.comboBoxDrives.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxDrives.Location = new System.Drawing.Point(12, 53);
             this.comboBoxDrives.Name = "comboBoxDrives";
-            this.comboBoxDrives.Size = new System.Drawing.Size(348, 24);
+            this.comboBoxDrives.Size = new System.Drawing.Size(464, 24);
             this.comboBoxDrives.TabIndex = 0;
             // 
             // textBoxDestination
@@ -62,15 +61,15 @@
             this.textBoxDestination.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxDestination.Location = new System.Drawing.Point(12, 102);
             this.textBoxDestination.Name = "textBoxDestination";
-            this.textBoxDestination.Size = new System.Drawing.Size(316, 22);
+            this.textBoxDestination.Size = new System.Drawing.Size(383, 22);
             this.textBoxDestination.TabIndex = 1;
             this.textBoxDestination.Text = "Destination Directory";
             // 
             // buttonBrowse
             // 
-            this.buttonBrowse.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.buttonBrowse.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.buttonBrowse.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonBrowse.Location = new System.Drawing.Point(334, 103);
+            this.buttonBrowse.Location = new System.Drawing.Point(401, 103);
             this.buttonBrowse.Name = "buttonBrowse";
             this.buttonBrowse.Size = new System.Drawing.Size(75, 21);
             this.buttonBrowse.TabIndex = 2;
@@ -82,7 +81,7 @@
             // 
             this.buttonCreateImage.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.buttonCreateImage.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCreateImage.Location = new System.Drawing.Point(36, 227);
+            this.buttonCreateImage.Location = new System.Drawing.Point(58, 227);
             this.buttonCreateImage.Name = "buttonCreateImage";
             this.buttonCreateImage.Size = new System.Drawing.Size(351, 28);
             this.buttonCreateImage.TabIndex = 3;
@@ -95,13 +94,13 @@
             this.progressBar1.BackColor = System.Drawing.SystemColors.Control;
             this.progressBar1.Location = new System.Drawing.Point(12, 280);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(400, 23);
+            this.progressBar1.Size = new System.Drawing.Size(464, 23);
             this.progressBar1.TabIndex = 4;
             // 
             // labelProgress
             // 
             this.labelProgress.AutoSize = true;
-            this.labelProgress.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.labelProgress.BackColor = System.Drawing.SystemColors.Info;
             this.labelProgress.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.labelProgress.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelProgress.Location = new System.Drawing.Point(12, 306);
@@ -140,7 +139,7 @@
             // 
             // labelChunkSize
             // 
-            this.labelChunkSize.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.labelChunkSize.BackColor = System.Drawing.SystemColors.Info;
             this.labelChunkSize.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.labelChunkSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelChunkSize.Location = new System.Drawing.Point(12, 143);
@@ -156,7 +155,7 @@
             this.checkBoxGentle.AutoSize = true;
             this.checkBoxGentle.FlatAppearance.CheckedBackColor = System.Drawing.Color.Lime;
             this.checkBoxGentle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.checkBoxGentle.Location = new System.Drawing.Point(14, 179);
+            this.checkBoxGentle.Location = new System.Drawing.Point(12, 188);
             this.checkBoxGentle.Name = "checkBoxGentle";
             this.checkBoxGentle.Size = new System.Drawing.Size(114, 20);
             this.checkBoxGentle.TabIndex = 8;
@@ -169,26 +168,27 @@
             this.checkBoxComputeHashes.BackColor = System.Drawing.SystemColors.Control;
             this.checkBoxComputeHashes.FlatAppearance.CheckedBackColor = System.Drawing.Color.Lime;
             this.checkBoxComputeHashes.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.checkBoxComputeHashes.Location = new System.Drawing.Point(146, 179);
+            this.checkBoxComputeHashes.Location = new System.Drawing.Point(132, 188);
             this.checkBoxComputeHashes.Name = "checkBoxComputeHashes";
             this.checkBoxComputeHashes.Size = new System.Drawing.Size(169, 20);
             this.checkBoxComputeHashes.TabIndex = 9;
             this.checkBoxComputeHashes.Text = "Compute MD5 & SHA1";
             this.checkBoxComputeHashes.UseVisualStyleBackColor = false;
+            this.checkBoxComputeHashes.CheckedChanged += new System.EventHandler(this.checkBoxComputeHashes_CheckedChanged);
             // 
             // progressBarHash
             // 
             this.progressBarHash.Location = new System.Drawing.Point(12, 351);
-            this.progressBarHash.MaximumSize = new System.Drawing.Size(400, 23);
+            this.progressBarHash.MaximumSize = new System.Drawing.Size(480, 23);
             this.progressBarHash.MinimumSize = new System.Drawing.Size(350, 23);
             this.progressBarHash.Name = "progressBarHash";
-            this.progressBarHash.Size = new System.Drawing.Size(400, 23);
+            this.progressBarHash.Size = new System.Drawing.Size(464, 23);
             this.progressBarHash.TabIndex = 10;
             // 
             // labelHashProgress
             // 
             this.labelHashProgress.AutoSize = true;
-            this.labelHashProgress.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.labelHashProgress.BackColor = System.Drawing.SystemColors.Info;
             this.labelHashProgress.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.labelHashProgress.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelHashProgress.Location = new System.Drawing.Point(12, 377);
@@ -200,7 +200,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.label1.BackColor = System.Drawing.SystemColors.Info;
             this.label1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(12, 32);
@@ -211,9 +211,8 @@
             // 
             // MainForm
             // 
-            this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(458, 451);
+            this.ClientSize = new System.Drawing.Size(492, 412);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.checkBoxComputeHashes);
             this.Controls.Add(this.checkBoxGentle);
@@ -229,7 +228,7 @@
             this.Controls.Add(this.labelHashProgress);
             this.DoubleBuffered = true;
             this.Name = "MainForm";
-            this.Text = "WinImager v1.0 - Outpost Edition";
+            this.Text = "WinImager v1.0 ";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownChunkMB)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

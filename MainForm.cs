@@ -9,14 +9,34 @@ using System.Windows.Forms;
 
 namespace WinImager
 {
-    
-
     public partial class MainForm : Form
     {
         public MainForm()
         {
             InitializeComponent();
             LoadPhysicalDrives();
+        }
+
+        // ADDED: Helper method to retrieve Model & SerialNumber from Win32_DiskDrive
+        private (string model, string serial) GetDriveInfo(string physicalDrivePath)
+        {
+            string model = "Unknown Model";
+            string serial = "Unknown Serial";
+
+            // Example: physicalDrivePath might be "\\.\PHYSICALDRIVE0"
+            // We'll match that to Win32_DiskDrive.DeviceID
+            string wmiPath = physicalDrivePath.Replace("\\", "\\\\"); // escape backslashes for WQL
+            string query = $"SELECT * FROM Win32_DiskDrive WHERE DeviceID = \"{wmiPath}\"";
+            var searcher = new ManagementObjectSearcher(query);
+
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                model = obj["Model"]?.ToString() ?? "Unknown Model";
+                serial = obj["SerialNumber"]?.ToString() ?? "Unknown Serial";
+                break; // take the first match
+            }
+
+            return (model, serial);
         }
 
         public class ImagingResult
@@ -117,8 +137,7 @@ namespace WinImager
             checkBoxGentle.Enabled = false;
             checkBoxComputeHashes.Enabled = false;
 
-            backgroundWorker1.RunWorkerAsync(
-                new Tuple<string, string>(drivePath, outputFile));
+            backgroundWorker1.RunWorkerAsync(new Tuple<string, string>(drivePath, outputFile));
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -135,7 +154,13 @@ namespace WinImager
 
             try
             {
-                // 1) Get geometry
+                // ADDED: Get drive model & serial
+                var (srcModel, srcSerial) = GetDriveInfo(drivePath);
+
+                // ADDED: Imaging start time
+                DateTime imagingStart = DateTime.Now;
+
+                // 1) Get geometry from DeviceIoControl
                 var geometryEx = DriveGeometryHelper.GetDriveGeometryEx(drivePath);
                 long totalBytes = geometryEx.DiskSize;
                 int bytesPerSector = geometryEx.Geometry.BytesPerSector;
@@ -144,8 +169,11 @@ namespace WinImager
 
                 // Build log
                 result.LogBuilder.AppendLine("=== Begin Imaging Log ===");
-                result.LogBuilder.AppendLine($"Drive Path: {drivePath}");
-                result.LogBuilder.AppendLine($"Total Bytes (from geometry): {totalBytes}");
+                result.LogBuilder.AppendLine($"Drive Path  : {drivePath}");
+                result.LogBuilder.AppendLine($"Model       : {srcModel}");   // ADDED
+                result.LogBuilder.AppendLine($"Serial      : {srcSerial}");  // ADDED
+                result.LogBuilder.AppendLine($"Imaging started: {imagingStart}"); // ADDED
+                result.LogBuilder.AppendLine($"Total Bytes (geometry): {totalBytes}");
                 result.LogBuilder.AppendLine($"Bytes Per Sector: {bytesPerSector}");
 
                 // 2) Chunk size
@@ -156,8 +184,8 @@ namespace WinImager
                 bool gentleMode = checkBoxGentle.Checked;
                 bool doHashes = checkBoxComputeHashes.Checked;
 
-                result.LogBuilder.AppendLine($"Chunk Size: {userChunkMB} MB => {chunkSize} bytes");
-                result.LogBuilder.AppendLine($"Gentle Mode: {gentleMode}");
+                result.LogBuilder.AppendLine($"Chunk Size  : {userChunkMB} MB => {chunkSize} bytes");
+                result.LogBuilder.AppendLine($"Gentle Mode : {gentleMode}");
                 result.LogBuilder.AppendLine($"Compute MD5/SHA1: {doHashes}");
 
                 // Prepare hashes
@@ -188,7 +216,7 @@ namespace WinImager
                             "Unable to open drive in raw mode.");
                     }
 
-                    // NOTE: Updated to ReadWrite so we can re-read the output file
+                    // NOTE: "ReadWrite" so we can re-read the output file for hashing
                     using (FileStream driveStream = new FileStream(driveHandle, FileAccess.Read))
                     using (FileStream outStream = new FileStream(outputFile,
                                                   FileMode.Create,
@@ -198,7 +226,7 @@ namespace WinImager
                         byte[] buffer = new byte[chunkSize];
                         long totalBytesRead = 0;
 
-                        // -- PHASE 1: IMAGING --
+                        // PHASE 1: IMAGING
                         while (true)
                         {
                             if (backgroundWorker1.CancellationPending)
@@ -232,8 +260,8 @@ namespace WinImager
                             if (bytesRead < toRead)
                             {
                                 // partial read (EOF or error)
-                                result.LogBuilder.AppendLine($"Partial read at offset {totalBytesRead}, " +
-                                                             $"bytesRead={bytesRead}/{toRead}");
+                                result.LogBuilder.AppendLine(
+                                    $"Partial read at offset {totalBytesRead}, bytesRead={bytesRead}/{toRead}");
                             }
 
                             outStream.Write(buffer, 0, bytesRead);
@@ -252,14 +280,12 @@ namespace WinImager
                             }
 
                             // Report imaging progress
-                            double imagingPercent =
-                                (double)totalBytesRead / totalBytes * 100.0;
+                            double imagingPercent = (double)totalBytesRead / totalBytes * 100.0;
                             backgroundWorker1.ReportProgress((int)imagingPercent, "IMAGING");
 
                             if (gentleMode) Thread.Sleep(10);
                         }
 
-                        // finalize the source hashes
                         if (doHashes)
                         {
                             md5Source?.TransformFinalBlock(new byte[0], 0, 0);
@@ -268,17 +294,24 @@ namespace WinImager
 
                         result.TotalBytesRead = totalBytesRead;
 
-                        // If user canceled during imaging, skip hashing
+                        // ADDED: Imaging end time
+                        DateTime imagingEnd = DateTime.Now;
+                        result.LogBuilder.AppendLine($"Imaging ended: {imagingEnd}");
+                        TimeSpan imagingDuration = imagingEnd - imagingStart;
+                        result.LogBuilder.AppendLine($"Imaging duration: {imagingDuration}");
+
+                        // PHASE 2: HASHING (if not canceled and doHashes is true)
                         if (!e.Cancel && doHashes)
                         {
-                            // -- PHASE 2: HASHING THE IMAGE FILE --
-                            // We read the entire outStream from the beginning
+                            // ADDED: Hashing start
+                            DateTime hashingStart = DateTime.Now;
+                            result.LogBuilder.AppendLine($"Hashing started: {hashingStart}");
+
                             outStream.Flush();
                             outStream.Seek(0, SeekOrigin.Begin);
 
                             long imageLength = outStream.Length;
                             long imageBytesRead = 0;
-
                             byte[] hashBuf = new byte[4 * 1024 * 1024]; // 4 MB read for hashing
                             int readCount;
 
@@ -301,6 +334,12 @@ namespace WinImager
                             result.Sha1Source = sha1Source?.Hash;
                             result.Md5Image = md5Image?.Hash;
                             result.Sha1Image = sha1Image?.Hash;
+
+                            // ADDED: Hashing end
+                            DateTime hashingEnd = DateTime.Now;
+                            result.LogBuilder.AppendLine($"Hashing ended: {hashingEnd}");
+                            TimeSpan hashingDuration = hashingEnd - hashingStart;
+                            result.LogBuilder.AppendLine($"Hashing duration: {hashingDuration}");
                         }
 
                         result.Completed = true;
@@ -309,7 +348,7 @@ namespace WinImager
                             $"Successful Chunks: {result.SuccessfulChunks}, " +
                             $"Error Chunks: {result.ErrorChunks}");
 
-                        // Append final MD5/SHA1 to the log
+                        // If doHashes + not canceled
                         if (doHashes && !e.Cancel)
                         {
                             // Convert byte arrays to hex
@@ -344,7 +383,6 @@ namespace WinImager
             }
         }
 
-        // UPDATED: now we check e.UserState to see if we're "IMAGING" or "HASHING".
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             string phase = e.UserState as string;
@@ -352,13 +390,13 @@ namespace WinImager
 
             if (phase == "HASHING")
             {
-                // Update second progress bar for hashing
+                // second progress bar for hashing
                 progressBarHash.Value = percent;
                 labelHashProgress.Text = $"Hash Progress: {percent}%";
             }
             else
             {
-                // Default or "IMAGING"
+                // IMAGING phase or default
                 progressBar1.Value = percent;
                 labelProgress.Text = $"Progress: {percent}%";
             }
@@ -398,7 +436,6 @@ namespace WinImager
                 return;
             }
 
-            // Otherwise e.Result = ImagingResult
             var result = e.Result as ImagingResult;
             if (result != null)
             {
@@ -443,9 +480,15 @@ namespace WinImager
 
         private void numericUpDownChunkMB_ValueChanged(object sender, EventArgs e)
         {
+            // Optionally handle user changes to chunk size in real time
+        }
 
+        private void checkBoxComputeHashes_CheckedChanged(object sender, EventArgs e)
+        {
+            // Optionally handle if user toggles hashing on/off
         }
     }
 }
+
 
 
